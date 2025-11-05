@@ -2,12 +2,10 @@ package net.dafarka.jeirecipechains.util;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
-import net.minecraft.world.level.block.Block;
 
 import java.util.HashSet;
 import java.util.Set;
