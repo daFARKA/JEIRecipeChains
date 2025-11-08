@@ -49,14 +49,11 @@ public class ChainBuilder {
         Map<Item, Integer> ingredientCounts = new HashMap<>();
         for (Ingredient ing : recipe.getIngredients()) {
           ItemStack[] options = ing.getItems();
-          if (options.length == 0) continue;
 
-          ItemStack chosen = options[0];
-          Item unique = chosen.getItem();
-
-
-          if (!excludedItems.contains(unique)) {
-            ingredientCounts.merge(unique, chosen.getCount(), Integer::sum);
+          for (ItemStack option : options) {
+            if (!excludedItems.contains(option.getItem())) {
+              ingredientCounts.merge(option.getItem(), option.getCount(), Integer::sum);
+            }
           }
         }
 

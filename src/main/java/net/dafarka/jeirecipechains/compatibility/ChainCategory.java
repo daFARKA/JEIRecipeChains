@@ -1,5 +1,6 @@
 package net.dafarka.jeirecipechains.compatibility;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableBuilder;
@@ -9,12 +10,14 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.dafarka.jeirecipechains.JEIRecipeChains;
 import net.dafarka.jeirecipechains.base.ChainNode;
 import net.dafarka.jeirecipechains.base.ChainType;
 import net.dafarka.jeirecipechains.base.RecipeChain;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -75,7 +78,6 @@ public class ChainCategory implements IRecipeCategory<RecipeChain> {
   public @Nullable IDrawable getIcon() {
     return icon;
   }
-
 
   @Override
   public void setRecipe(IRecipeLayoutBuilder builder, RecipeChain recipe, IFocusGroup focuses) {
@@ -321,15 +323,31 @@ public class ChainCategory implements IRecipeCategory<RecipeChain> {
 
   @Override
   public void draw(RecipeChain recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics graphics, double mouseX, double mouseY) {
+    Minecraft mc = Minecraft.getInstance();
+    PoseStack pose = graphics.pose();
+
     drawBoxesFromMap(graphics, recipe.getRoot());
 
-    Minecraft mc = Minecraft.getInstance();
     Font font = mc.font;
-
     drawRectangle(graphics, 2, 2, 8, 8, (0xff << 24) + COLOR_ADD);
     drawRectangle(graphics, 2, 16, 8, 8, (0xff << 24) + COLOR_OR);
     graphics.drawString(font, "Craft Together", 12, 2, 0x000000, false);
     graphics.drawString(font, "Alternatives", 12, 16, 0x000000, false);
+  }
+
+  private void drawItems(GuiGraphics graphics, ChainNode node, double mouseX, double mouseY) {
+    if (node == null) return;
+    Point p = node.getGuiPosition();
+    if (p != null) {
+      graphics.renderItem(node.getStack(), p.x, p.y);
+
+      // Optional: draw tooltip
+      Minecraft mc = Minecraft.getInstance();
+      if (mouseX >= p.x && mouseX <= p.x + 16 && mouseY >= p.y && mouseY <= p.y + 16) {
+        graphics.renderTooltip(mc.font, node.getStack(), (int) mouseX, (int) mouseY);
+      }
+    }
+    for (ChainNode child : node.getChildren()) drawItems(graphics, child, mouseX, mouseY);
   }
 
   private void drawBoxesFromMap(GuiGraphics guiGraphics, ChainNode node) {

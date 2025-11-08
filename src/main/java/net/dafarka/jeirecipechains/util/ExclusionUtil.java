@@ -2,12 +2,16 @@ package net.dafarka.jeirecipechains.util;
 
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ExclusionUtil {
@@ -18,11 +22,16 @@ public class ExclusionUtil {
   };
 
   public static Set<Item> getExcludedItems(RecipeManager recipeManager, RegistryAccess registryAccess) {
+    List<String> excludedNames = List.of("");
+    List<String> excludedTags = List.of("minecraft:bamboo_blocks");
+
     Set<Item> excluded = new HashSet<>();
 
     excluded.addAll(getColoredItems());
     excluded.addAll(getRecyclables(recipeManager, registryAccess));
     excluded.addAll(getRawBlocks());
+    excluded.addAll(getCustomExclusions(excludedNames));
+    excluded.addAll(getCustomExclusions(excludedTags, registryAccess));
 
     return excluded;
   }
@@ -89,6 +98,43 @@ public class ExclusionUtil {
       if (path.startsWith("raw_")) {
         excluded.add(item);
       }
+    }
+
+    return excluded;
+  }
+
+  public static Set<Item> getCustomExclusions(List<String> itemNames) {
+    Set<Item> excluded = new HashSet<>();
+
+    for (String name : itemNames) {
+      ResourceLocation id = name.contains(":")
+          ? new ResourceLocation(name)
+          : new ResourceLocation("minecraft", name);
+
+      Item item = BuiltInRegistries.ITEM.get(id);
+      if (item != null) {
+        excluded.add(item);
+      }
+    }
+
+    return excluded;
+  }
+
+  public static Set<Item> getCustomExclusions(List<String> tagNames, RegistryAccess registryAccess) {
+    Set<Item> excluded = new HashSet<>();
+
+    for (String tagName : tagNames) {
+      ResourceLocation tagId = new ResourceLocation(tagName);
+      TagKey<Item> tag = TagKey.create(BuiltInRegistries.ITEM.key(), tagId);
+
+      // Fetch items in tag using RegistryAccess (ensures modded tags work properly)
+      var items = registryAccess.lookupOrThrow(BuiltInRegistries.ITEM.key())
+          .getOrThrow(tag)
+          .stream()
+          .map(holder -> holder.value())
+          .toList();
+
+      excluded.addAll(items);
     }
 
     return excluded;
